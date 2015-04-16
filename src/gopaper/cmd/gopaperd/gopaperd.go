@@ -12,15 +12,6 @@ var (
 	ErrLangNotSupportedYet = errors.New("Sorry, this language is not supported yet")
 )
 
-type gendocReq struct {
-	source   *gocco.SourceFile
-	outputCh chan []byte
-}
-
-var (
-	goccoCh = make(chan *gendocReq)
-)
-
 func goccoHandler(w http.ResponseWriter, r *http.Request) {
 	candidate := r.RequestURI
 
@@ -54,28 +45,7 @@ func goccoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(gocco.GenerateDocumentation(content))
 }
 
-func goccoListener(ch <-chan *gendocReq) {
-	for req := range ch {
-		content := Generate(req.source)
-		req.outputCh <- content
-		close(req.outputCh)
-	}
-}
-
-func Generate(content *gocco.SourceFile) []byte {
-	var (
-		ch      chan []byte = make(chan []byte)
-		request *gendocReq  = &gendocReq{content, ch}
-	)
-
-	goccoCh <- request
-
-	return <-ch
-}
-
 func main() {
-	go goccoListener(goccoCh)
-
 	http.HandleFunc("/", goccoHandler)
 	http.ListenAndServe("0.0.0.0:8080", nil)
 }
