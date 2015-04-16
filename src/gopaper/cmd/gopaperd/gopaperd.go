@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrLangNotSupportedYet = errors.New("Sorry, this kind of language is not supported yet")
+	ErrLangNotSupportedYet = errors.New("Sorry, this language is not supported yet")
 )
 
 type gendocReq struct {
