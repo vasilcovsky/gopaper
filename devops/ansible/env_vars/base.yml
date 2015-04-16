@@ -1,0 +1,9 @@
+---
+
+app_name: gocco
+
+app_local: /Users/vasilcovsky/projects/gocco/bin/linux_386/goccod
+
+app_user: appusr
+app_group: appusr
+app_path: /app
