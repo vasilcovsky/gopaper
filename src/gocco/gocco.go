@@ -1,4 +1,5 @@
-// Insiped by http://github.com/nikhilm/gocco
+// Initially forked from http://github.com/nikhilm/gocco
+//
 // The [source for Gocco](http://github.com/nikhilm/gocco) is available on
 // GitHub, and released under the MIT license.
 //
@@ -68,8 +69,6 @@ type TemplateData struct {
 type SourceFile struct {
 	Path    string
 	Content []byte
-	ETag    string
-	Expires string
 }
 
 // a map of all the languages we know
@@ -237,4 +236,11 @@ func GenerateDocumentation(file *SourceFile) []byte {
 	sections := parse(file.Path, file.Content)
 	highlight(file.Path, sections)
 	return generateHTML(file.Path, sections)
+}
+
+// Returns true if `file` could be processed
+func Allowed(file string) bool {
+	ext := filepath.Ext(file)
+	_, ok := languages[ext]
+	return ok
 }
