@@ -13,11 +13,9 @@ import (
 	"bytes"
 	"container/list"
 	"github.com/russross/blackfriday"
-	"io"
-	"os/exec"
 	"path/filepath"
 	"regexp"
-	"text/template"
+	"html/template"
 )
 
 // ## Types
@@ -37,7 +35,7 @@ type Section struct {
 // a `TemplateSection` is a section that can be passed
 // to Go's templating system, which expects strings.
 type TemplateSection struct {
-	DocsHTML string
+	DocsHTML template.HTML
 	CodeHTML string
 	// The `Index` field is used to create anchors to sections
 	Index int
@@ -75,7 +73,7 @@ type SourceFile struct {
 var languages map[string]*Language
 
 // Wrap the code in these
-const highlightStart = "<div class=\"highlight\"><pre>"
+const highlightStart = "<div><pre>"
 const highlightEnd = "</pre></div>"
 
 // ## Main documentation generation functions
@@ -132,37 +130,9 @@ func parse(source string, code []byte) *list.List {
 // searches for the delimiters and extracts the HTML version of the code
 // and documentation for each `Section`
 func highlight(source string, sections *list.List) {
-	language := getLanguage(source)
-	pygments := exec.Command("pygmentize", "-l", language.name, "-f", "html", "-O", "encoding=utf-8")
-	pygmentsInput, _ := pygments.StdinPipe()
-	pygmentsOutput, _ := pygments.StdoutPipe()
-	// start the process before we start piping data to it
-	// otherwise the pipe may block
-	pygments.Start()
+	//language := getLanguage(source)
 	for e := sections.Front(); e != nil; e = e.Next() {
-		pygmentsInput.Write(e.Value.(*Section).codeText)
-		if e.Next() != nil {
-			io.WriteString(pygmentsInput, language.dividerText)
-		}
-	}
-	pygmentsInput.Close()
-
-	buf := new(bytes.Buffer)
-	io.Copy(buf, pygmentsOutput)
-
-	output := buf.Bytes()
-	output = bytes.Replace(output, []byte(highlightStart), nil, -1)
-	output = bytes.Replace(output, []byte(highlightEnd), nil, -1)
-
-	for e := sections.Front(); e != nil; e = e.Next() {
-		index := language.dividerHTML.FindIndex(output)
-		if index == nil {
-			index = []int{len(output), len(output)}
-		}
-
-		fragment := output[0:index[0]]
-		output = output[index[1]:]
-		e.Value.(*Section).CodeHTML = bytes.Join([][]byte{[]byte(highlightStart), []byte(highlightEnd)}, fragment)
+		e.Value.(*Section).CodeHTML = e.Value.(*Section).codeText
 		e.Value.(*Section).DocsHTML = blackfriday.MarkdownCommon(e.Value.(*Section).docsText)
 	}
 }
@@ -176,7 +146,7 @@ func generateHTML(source string, sections *list.List) []byte {
 		var sec = e.Value.(*Section)
 		docsBuf := bytes.NewBuffer(sec.DocsHTML)
 		codeBuf := bytes.NewBuffer(sec.CodeHTML)
-		sectionsArray[i] = &TemplateSection{docsBuf.String(), codeBuf.String(), i + 1}
+		sectionsArray[i] = &TemplateSection{template.HTML(docsBuf.String()), codeBuf.String(), i + 1}
 	}
 	// run through the Go template
 	html := goccoTemplate(TemplateData{title, sectionsArray})
@@ -212,7 +182,7 @@ func setupLanguages() {
 	// you should add more languages here
 	// only the first two fields should change, the rest should
 	// be `nil, "", nil`
-	languages[".go"] = &Language{"go", "//", nil, "", nil}
+	languages[".go"] = &Language{"golang", "//", nil, "", nil}
 	languages[".py"] = &Language{"python", "#", nil, "", nil}
 }
 

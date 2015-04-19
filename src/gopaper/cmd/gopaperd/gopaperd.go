@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github"
 	"gocco"
+	"log"
 	"net/http"
 )
 
@@ -47,5 +48,5 @@ func goccoHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", goccoHandler)
-	http.ListenAndServe("0.0.0.0:8080", nil)
+	log.Fatalln(http.ListenAndServe("0.0.0.0:8080", nil))
 }

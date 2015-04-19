@@ -194,9 +194,15 @@ var HTML = `
 
 <html>
 <head>
-    <title>{{ .Title }}</title>
+   <title>{{ .Title }}</title>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <link rel="stylesheet" media="all" href="http://nikhilm.github.io/gocco/gocco.css" />
+  <link rel="stylesheet" href="https://highlightjs.org/static/styles/default.css" />
+  <style>
+  .hljs {background-color: #f5f5ff;}
+  </style>
+  <script src="https://highlightjs.org/static/highlight.pack.js"></script>
+  <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
 </head>
 <body>
   <div id="container">
@@ -223,13 +229,14 @@ var HTML = `
                 {{ .DocsHTML }}
             </td>
             <td class="code">
-                {{ .CodeHTML }}
+                <pre><code class="golang">{{ .CodeHTML }}</code></pre>
             </td>
           </tr>
           {{ end }}
       </tbody>
     </table>
   </div>
+
 </body>
 </html>
 `
