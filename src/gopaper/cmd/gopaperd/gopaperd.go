@@ -1,16 +1,16 @@
 package main
 
 import (
-	"net/http"
-	"gocco"
-	"fmt"
-	"html/template"
-	"github"
 	"errors"
-	"os"
-	"strconv"
-	"path/filepath"
+	"fmt"
+	"github"
+	"gocco"
+	"html/template"
 	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
 )
 
 var (
@@ -20,6 +20,8 @@ var (
 type AppContext struct {
 	// path to template directory
 	tplPath string
+	// path to static directory
+	staticPath string
 	// flag to check ETag header in http request
 	allowETag bool
 	// parsed template for view code
@@ -29,6 +31,7 @@ type AppContext struct {
 // Create new application context from Environment variables
 func NewFromEnv() (*AppContext, error) {
 	tplPath := os.Getenv("GOPAPERD_TPL_PATH")
+	staticPath := os.Getenv("GOPAPERD_STATIC_PATH")
 	allowETag, err := strconv.ParseBool(os.Getenv("GOPAPERD_ALLOW_ETAG"))
 
 	if err != nil {
@@ -42,14 +45,16 @@ func NewFromEnv() (*AppContext, error) {
 	}
 
 	ctx := &AppContext{
-		tplPath,
-		allowETag,
-		tpl,
+		tplPath: tplPath,
+		staticPath: staticPath,
+		allowETag: allowETag,
+		contentTpl: tpl,
 	}
 
 	return ctx, nil
 }
 
+// Handler for Github URL
 func (ctx AppContext) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	candidate := r.RequestURI
 
@@ -78,9 +83,11 @@ func (ctx AppContext) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Content: file.Content,
 	}
 
+	doc := gocco.GenerateDocumentation(content, ctx.contentTpl)
+
 	w.Header().Set("ETag", file.Header.Get("ETag"))
 	w.Header().Set("Expires", file.Header.Get("Expires"))
-	w.Write(gocco.GenerateDocumentation(content, ctx.contentTpl))
+	w.Write(doc)
 }
 
 func main() {
@@ -91,8 +98,11 @@ func main() {
 	}
 
 	log.Printf("Template path: %s", ctx.tplPath)
+	log.Printf("Static path: %s", ctx.staticPath)
 	log.Printf("Allow ETag: %t", ctx.allowETag)
 
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(ctx.staticPath))))
 	http.Handle("/", ctx)
+
 	log.Fatalln(http.ListenAndServe("0.0.0.0:8080", nil))
 }
