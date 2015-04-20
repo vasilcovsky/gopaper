@@ -1,12 +1,5 @@
 // Initially forked from http://github.com/nikhilm/gocco
-//
-// The [source for Gocco](http://github.com/nikhilm/gocco) is available on
-// GitHub, and released under the MIT license.
-//
-// To install Gocco, first make sure you have [Pygments](http://pygments.org/)
-// Then, with the go tool:
-//
-//     go get github.com/nikhilm/gocco
+
 package gocco
 
 import (
@@ -71,10 +64,6 @@ type SourceFile struct {
 
 // a map of all the languages we know
 var languages map[string]*Language
-
-// Wrap the code in these
-const highlightStart = "<div><pre>"
-const highlightEnd = "</pre></div>"
 
 // ## Main documentation generation functions
 
@@ -154,17 +143,6 @@ func generateHTML(source string, sections *list.List, tpl *template.Template) []
 }
 
 func goccoTemplate(data TemplateData, tpl *template.Template) []byte {
-	// this hack is required because `ParseFiles` doesn't
-	// seem to work properly, always complaining about empty templates
-	/*t, err := template.New("gocco").Funcs(
-		// introduce the two functions that the template needs
-		template.FuncMap{
-			"base": filepath.Base,
-		}).Parse(HTML)
-	if err != nil {
-		panic(err)
-	}*/
-
 	buf := new(bytes.Buffer)
 	err := tpl.Execute(buf, data)
 	if err != nil {
