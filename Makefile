@@ -7,7 +7,7 @@ GODEP=$(GOTEST) -i
 
 GOPATH:=$(CURDIR)/_vendor:$(CURDIR)/
 
-APPNAME = gocco
+APPNAME = gopaperd
 DISTDIR = dist
 
 all: dist
@@ -20,12 +20,13 @@ env:
 	$(GO) env
 
 build:
-	CGO_ENABLED=0 GOOS=linux GOARCH=386 $(GO) build 	-o bin/$(APPNAME)
+	CGO_ENABLED=0 GOOS=linux GOARCH=386 $(GOINSTALL) gopaper/...
+	CGO_ENABLED=0 $(GOINSTALL) gopaper/...
 
 dist: clean build
 	mkdir $(DISTDIR)
-	cp bin/$(APPNAME) $(DISTDIR)
+	cp bin/linux_386/$(APPNAME) $(DISTDIR)
+	cp -R src/gopaper/cmd/gopaperd/static $(DISTDIR)
+	cp -R src/gopaper/cmd/gopaperd/templates $(DISTDIR)
+	tar -zcvf $(DISTDIR)/gopaper.tar.gz dist
 	echo "Dist done"
-
-test:
-	go test -v $(PACKAGES)

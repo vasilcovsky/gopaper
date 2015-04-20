@@ -1,5 +1,6 @@
 .idea/
 bin/
 pkg/
+dist/
 _vendor/pkg/
 *.iml
