@@ -138,7 +138,7 @@ func highlight(source string, sections *list.List) {
 }
 
 // render the final HTML
-func generateHTML(source string, sections *list.List) []byte {
+func generateHTML(source string, sections *list.List, tpl *template.Template) []byte {
 	title := filepath.Base(source)
 	// convert every `Section` into corresponding `TemplateSection`
 	sectionsArray := make([]*TemplateSection, sections.Len())
@@ -149,23 +149,24 @@ func generateHTML(source string, sections *list.List) []byte {
 		sectionsArray[i] = &TemplateSection{template.HTML(docsBuf.String()), codeBuf.String(), i + 1}
 	}
 	// run through the Go template
-	html := goccoTemplate(TemplateData{title, sectionsArray})
+	html := goccoTemplate(TemplateData{title, sectionsArray}, tpl)
 	return html
 }
 
-func goccoTemplate(data TemplateData) []byte {
+func goccoTemplate(data TemplateData, tpl *template.Template) []byte {
 	// this hack is required because `ParseFiles` doesn't
 	// seem to work properly, always complaining about empty templates
-	t, err := template.New("gocco").Funcs(
+	/*t, err := template.New("gocco").Funcs(
 		// introduce the two functions that the template needs
 		template.FuncMap{
 			"base": filepath.Base,
 		}).Parse(HTML)
 	if err != nil {
 		panic(err)
-	}
+	}*/
+
 	buf := new(bytes.Buffer)
-	err = t.Execute(buf, data)
+	err := tpl.Execute(buf, data)
 	if err != nil {
 		panic(err)
 	}
@@ -202,10 +203,10 @@ func init() {
 // and putting it together.
 // The WaitGroup is used to signal we are done, so that the main
 // goroutine waits for all the sub goroutines
-func GenerateDocumentation(file *SourceFile) []byte {
+func GenerateDocumentation(file *SourceFile, tpl *template.Template) []byte {
 	sections := parse(file.Path, file.Content)
 	highlight(file.Path, sections)
-	return generateHTML(file.Path, sections)
+	return generateHTML(file.Path, sections, tpl)
 }
 
 // Returns true if `file` could be processed
